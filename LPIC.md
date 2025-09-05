@@ -663,7 +663,7 @@ $
 
 > 2 lệnh trên có công dụng tương tự nhau.
 
-#### Tìm hiểu về Regular Expression cơ bản
+#### Tìm hiểu về Basic Regular Expression
 
 1 số Basic Regular Expression :
 - `.*` : biểu diễn nhiều ký tự.
@@ -722,3 +722,121 @@ $ grep [[:digit:]] random.txt
 $
 ```
 
+#### Tìm hiểu về Extended Regular Expression
+
+Extended Regular Expression cho phép các pattern phức tạp hơn. Ví dụ khi sử dụng ký tự `|` cho phép xác định 2 khả năng mà từ hoặc ký tự sẽ khớp. Ngoài ra có thể sử dụng dấu `()` để mở rộng thêm biểu thức.
+
+```
+$ grep -E "^root|^dbus" /etc/passwd
+root:x:0:0:root:/root:/bin/bash
+dbus:x:81:81:System message bus:/:/sbin/nologin
+$
+$ egrep "(daemon|s).*nologin" /etc/passwd
+bin:x:1:1:bin:/bin:/sbin/nologin
+daemon:x:2:2:daemon:/sbin:/sbin/nologin
+[…]
+$
+```
+
+> Phải sử dụng option `-E` để chỉ định đó là pattern được sử dụng trong Extended Regular Expression.
+> 
+>> `egrep` tương đương với `grep -E`.
+
+### Sử dụng Stream, Redirection và Pipe
+
+#### Chuyển hướng Input và Output
+
+##### Xử lý Standard Output
+
+> Linux coi tất cả object đều là các file, bao gồm cả output process. Mỗi file sẽ được liên kết với 1 process có id độc nhất để xác định, được gọi là ***file descriptor***.
+> File Descriptor dùng để nhận dạng output của 1 lệnh hoặc script là `1` - STDOUT.
+
+Theo mặc định ,STDOUT sẽ điều hướng output tới terminal hiện tại. Tuy nhiên có thể sử dụng ***redirection operator*** để điều chỉnh nơi mà output và input được gửi đến.
+
+> Process của terminal hiện tại được biễu diễn trong file `/dev/tty`.
+
+Sử dụng `>` để chuyển hướng output và ghi đè vào file.
+
+```
+$ grep nologin$ /etc/passwd
+bin:x:1:1:bin:/bin:/sbin/nologin
+daemon:x:2:2:daemon:/sbin:/sbin/nologin
+[…]
+$ grep nologin$ /etc/passwd > NologinAccts.txt
+$
+$ less NologinAccts.txt
+bin:x:1:1:bin:/bin:/sbin/nologin
+daemon:x:2:2:daemon:/sbin:/sbin/nologin
+[…]
+$
+```
+
+Sử dụng `>>` để chuyển hướng output và gán tiếp vào nội dung cuối của file.
+
+```
+$ echo "Nov 16, 2019" > AccountAudit.txt
+$
+$ wc -l /etc/passwd >> AccountAudit.txt
+$
+$ cat AccountAudit.txt
+Nov 16, 2019
+44 /etc/passwd
+$
+```
+
+##### Chuyển hướng Standard Error
+
+File descriptor dùng để nhận dạng error message của 1 lệnh hoặc script là 2 - STDERR. Theo mặc định sẽ gửi error tới terminal hiện tại (`/dev/tty`).
+
+Sử dụng `2>` để chuyển hướng error và ghi đè vào file.
+
+```
+$ grep -d skip hosts: /etc/*
+grep: /etc/anacrontab: Permission denied
+grep: /etc/audisp: Permission denied
+[…]
+$
+$ grep -d skip hosts: /etc/* 2> err.txt
+/etc/nsswitch.conf:#hosts: db files nisplus nis dns
+/etc/nsswitch.conf:hosts: files dns myhostname
+[…]
+$
+$ cat err.txt
+grep: /etc/anacrontab: Permission denied
+grep: /etc/audisp: Permission denied
+[…]
+$
+```
+
+> Nếu muốn gửi cả STDOUT và STDERR vào cùng 1 file, có thể sử dụng `&>`.
+
+Nếu không muốn giữ error message, ta có thể redirect tới `/dev/null`.
+
+```
+$ grep -d skip hosts: /etc/* 2> /dev/null
+/etc/nsswitch.conf:#hosts: db files nisplus nis dns
+/etc/nsswitch.conf:hosts: files dns myhostname
+[…]
+$
+```
+
+##### Chuyển hướng Standard Input
+
+Theo mặc định, Standard Input sẽ sử dụng thông qua bàn phím, hoặc input device khác. File descriptor dùng để nhận dạng input của 1 lệnh hoặc script là `0` - STDIN.
+
+Sử dụng `<` để chuyển hướng input.
+
+```
+$ cat Grades.txt
+89 76 100 92 68 84 73
+$
+$ tr " " "," < Grades.txt
+89,76,100,92,68,84,73
+$
+```
+
+> Lệnh tr yêu cầu sử dụng `<`, lệnh này sẽ thay đổi ký tự khoảng cách (space) thành dấu phẩy (,). Lệnh này không làm thay đổi file.
+
+### Các Redirection Operator thường dùng
+
+![](assets/redirection_operator.PNG)
