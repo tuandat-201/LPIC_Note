@@ -837,6 +837,109 @@ $
 
 > Lệnh tr yêu cầu sử dụng `<`, lệnh này sẽ thay đổi ký tự khoảng cách (space) thành dấu phẩy (,). Lệnh này không làm thay đổi file.
 
-### Các Redirection Operator thường dùng
+##### Các Redirection Operator thường dùng
 
 ![](assets/redirection_operator.PNG)
+
+### Pipe trong Linux
+
+Pipe trong Linux là cơ chế redirect STDOUT, STDIN và STDERR giữa các command.
+
+Pipe có cấu trúc như sau:
+
+```
+COMMAND1 | COMMAND2 [| COMMANDN]…
+```
+
+Khi **COMMAND1** được thực thi, Pipe sẽ redirect STDOUT của lệnh đó thành STDIN của **COMMAND2**. Ta có thể tiếp tục quá trình này khi sử dụng Pipe kết hợp nhiêu lệnh.
+
+```
+$ grep /sbin/nologin$ /etc/passwd | cut -d ":" -f 1 | sort | less
+abrt
+adm
+avahi
+bin
+chrony
+[…]
+:
+```
+
+Để lưu 1 copy của output sử dụng pipe ta có thể sử dụng lệnh **tee**. Lệnh này cho phép lưu output vào file và hiển thị ra STDOUT.
+
+```
+$ grep /bin/bash$ /etc/passwd | tee BashUsers.txt
+root:x:0:0:root:/root:/bin/bash
+user1:x:1000:1000:Student User One:/home/user1:/bin/bash
+Christine:x:1001:1001::/home/Christine:/bin/bash
+$
+$ cat BashUsers.txt
+root:x:0:0:root:/root:/bin/bash
+user1:x:1000:1000:Student User One:/home/user1:/bin/bash
+Christine:x:1001:1001::/home/Christine:/bin/bash
+$
+```
+
+### Cách sử dụng sed
+
+Đôi khi ta muốn chỉnh sửa text mà k cần phải mở 1 text editor đầy đủ. ***Stream Editor*** sẽ chỉnh sửa text được chuyền vào thông qua file hoặc cơ chế Pipe.
+
+Lệnh ***sed*** sẽ gọi stream editor này. Nó chạy rất nhanh vì chỉ cần duyệt qua text 1 lần để áp dụng các chỉnh sửa.
+
+Sau đây là cách hoạt động của nó :
+1. Đọc từng dòng text một từ input stream.
+2. Chọn từng text match với các lệnh được cung cấp.
+3. Sửa đổi các text theo chỉ định của các lệnh.
+4. Hiển thị text đã được sửa đổi.
+
+Dưới đây là cấu trúc lệnh ***sed***
+
+```
+sed [OPTIONS] [SCRIPT]… [FILENAME]
+```
+
+Ví dụ về sử dụng **sed**
+```
+$ echo "I like cake." | sed 's/cake/donuts/'
+I like donuts.
+$
+```
+
+Trong phần script của **sed** có sử dụng lệnh *s (substitute - thay thế)* để nếu như tìm thấy text có giá trị là *cake* sẽ thay thế bằng *donuts*.
+
+Để thay thế toàn bộ text có giá trị là *cake* thành *donuts*, thêm vào lệnh *g (global)* ở cuối scripts.
+
+```
+$ echo "I love cake and more cake." | sed 's/cake/donuts/'
+I love donuts and more cake.
+$
+$ echo "I love cake and more cake." | sed 's/cake/donuts/g'
+I love donuts and more donuts.
+$
+```
+
+> Lưu ý rằng **sed** không làm thay đổi nội dung của file. Để lưu thay đổi có thể dùng toán tử redirect hoặc dùng option *-i*.
+
+Tiếp theo, ta có thể xoá text bằng stream editor với cú pháp *'PATTERN/d'* thực thi trên phần SCRIPT của lệnh **sed**.
+
+```
+$ sed '/Christine/d' cake.txt
+Rich likes lemon cake.
+Tim only likes yellow cake.
+Samantha does not like cake.
+$
+```
+
+Ngoài ra, ta có thể thay thế toàn bộ 1 dòng text, bằng cú pháp *ADDRESScNEWTEXT* thực thi trên phần SCRIPT của lệnh sed
+
+```
+$ sed '4cI am a new line' cake.txt
+Christine likes chocolate cake.
+Rich likes lemon cake.
+Tim only likes yellow cake.
+I am a new line
+$
+```
+
+Các option thường được dùng với lệnh sed
+
+![](assets/sed.PNG)
